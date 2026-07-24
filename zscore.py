@@ -33,7 +33,6 @@ import pysam
 import math
 import numpy
 
-from functools import reduce
 from joblib import Parallel, delayed
 
 
@@ -156,7 +155,12 @@ def zscores(bed, bigwig, j=1):
 
 
 def assert_lt_nproc(value) -> int:
-    value = int(value)
+    try:
+        value = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            "value passed to jobs could not be parsed into an int"
+        )
     if value > os.cpu_count():
         raise argparse.ArgumentTypeError(
             "number of jobs (%d) exceeds CPU count (%d)" % (value, os.cpu_count())
@@ -169,7 +173,7 @@ def main():
     parser.add_argument("signal", type=str, help="BAM or BigWig file")
     parser.add_argument("regions", type=str, help="BED file of genomic intervals")
     parser.add_argument(
-        "--threshold", "-t", default=1.64, type=float, help="zscore filter threshold"
+        "--threshold", "-t", default="NA", type=float, help="zscore filter threshold"
     )
     parser.add_argument(
         "--jobs",
